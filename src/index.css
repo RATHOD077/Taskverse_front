@@ -1,0 +1,237 @@
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap");
+@import "tailwindcss";
+
+/* ══════════════════════════════════════════════════
+   CSS CUSTOM PROPERTIES — rem-based design tokens
+══════════════════════════════════════════════════ */
+:root {
+  --app-font: "Inter", "Segoe UI", "Helvetica Neue", Arial, sans-serif;
+
+  /* Spacing tokens (rem) */
+  --space-1: 0.25rem;
+  --space-2: 0.5rem;
+  --space-3: 0.75rem;
+  --space-4: 1rem;
+  --space-5: 1.25rem;
+  --space-6: 1.5rem;
+  --space-8: 2rem;
+  --space-10: 2.5rem;
+
+  /* Fluid page padding — scales with viewport */
+  --page-px: clamp(0.75rem, 3.5vw, 2rem);
+  --page-py: clamp(0.75rem, 2.5vw, 1.75rem);
+
+  /* Fluid typography */
+  --text-page-title:    clamp(1.25rem, 3vw, 1.875rem);
+  --text-section-title: clamp(1rem, 2vw, 1.25rem);
+  --text-xs:   0.6875rem;
+  --text-sm:   0.75rem;
+  --text-base: 0.875rem;
+  --text-md:   0.9375rem;
+  --text-lg:   1rem;
+  --text-xl:   1.125rem;
+
+  /* Layout */
+  --sidebar-width:     18rem;
+  --emp-sidebar-width: 16rem;
+  --topbar-height:     3.5rem;
+}
+
+/* ══════════════════════════════════════════════════
+   BASE
+══════════════════════════════════════════════════ */
+html, body, #root {
+  font-family: var(--app-font);
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  overflow-x: hidden;
+}
+
+* {
+  font-family: inherit;
+  box-sizing: border-box;
+}
+
+/* ══════════════════════════════════════════════════
+   SCROLLBAR UTILITIES
+══════════════════════════════════════════════════ */
+.scrollbar-thin::-webkit-scrollbar          { width: 0.25rem; height: 0.25rem; }
+.scrollbar-thin::-webkit-scrollbar-track    { background: transparent; }
+.scrollbar-thin::-webkit-scrollbar-thumb    { background: #e2e8f0; border-radius: 9999px; }
+.scrollbar-thin::-webkit-scrollbar-thumb:hover { background: #cbd5e1; }
+
+.scrollbar-hide                { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
+/* ══════════════════════════════════════════════════
+   PAGE CONTAINER — fluid padding, no overflow
+══════════════════════════════════════════════════ */
+.page-container {
+  padding: var(--page-py) var(--page-px);
+  width: 100%;
+  max-width: 100%;
+  min-height: 100vh;
+}
+
+/* ══════════════════════════════════════════════════
+   TOP BAR — sticky content header inside main area
+══════════════════════════════════════════════════ */
+.page-topbar {
+  height: var(--topbar-height);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding-left: var(--page-px);
+  padding-right: var(--page-px);
+  border-bottom: 1px solid #f1f5f9;
+  background: #fff;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+  row-gap: 0;
+  min-height: var(--topbar-height);
+}
+
+/* ══════════════════════════════════════════════════
+   TABLE — always horizontally scrollable on small screens
+══════════════════════════════════════════════════ */
+.table-responsive {
+  width: 100%;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+}
+
+/* ══════════════════════════════════════════════════
+   STAT GRID — auto-fit columns, min 11rem
+══════════════════════════════════════════════════ */
+.stat-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 11rem), 1fr));
+  gap: 1rem;
+}
+
+/* ══════════════════════════════════════════════════
+   MODAL OVERLAY & CARD
+══════════════════════════════════════════════════ */
+.modal-overlay {
+  position: fixed;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.45);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+  padding: clamp(0.5rem, 3vw, 1.5rem);
+}
+
+.modal-card {
+  background: #fff;
+  border-radius: 1.25rem;
+  width: 100%;
+  max-width: 32rem;
+  max-height: 95dvh;
+  overflow-y: auto;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.18);
+}
+
+/* ══════════════════════════════════════════════════
+   BREADCRUMB
+══════════════════════════════════════════════════ */
+.breadcrumb {
+  display: flex;
+  align-items: center;
+  gap: 0.375rem;
+  font-size: var(--text-xs);
+  color: #64748b;
+  overflow-x: auto;
+  white-space: nowrap;
+  scrollbar-width: none;
+}
+.breadcrumb::-webkit-scrollbar { display: none; }
+
+/* ══════════════════════════════════════════════════
+   RESPONSIVE VISIBILITY HELPERS
+══════════════════════════════════════════════════ */
+@media (max-width: 39.9375rem) {
+  /* < 640px */
+  .hide-xs { display: none !important; }
+}
+@media (max-width: 47.9375rem) {
+  /* < 768px */
+  .hide-sm { display: none !important; }
+  .page-topbar { height: auto; padding-top: 0.5rem; padding-bottom: 0.5rem; }
+}
+@media (max-width: 63.9375rem) {
+  /* < 1024px */
+  .hide-md { display: none !important; }
+}
+
+/* ══════════════════════════════════════════════════
+   ROLES PAGE — override the very large fixed spacing to be responsive
+══════════════════════════════════════════════════ */
+.roles-page main {
+  padding: var(--page-py) var(--page-px) !important;
+}
+
+@media (max-width: 47.9375rem) {
+  /* header card */
+  .roles-header-card {
+    padding: 1.25rem !important;
+    border-radius: 1rem !important;
+    flex-direction: column !important;
+    align-items: flex-start !important;
+    gap: 1rem !important;
+  }
+  .roles-header-card h1 {
+    font-size: clamp(1.25rem, 5vw, 1.875rem) !important;
+  }
+  .roles-header-search input {
+    width: 100% !important;
+  }
+  /* table card */
+  .roles-table-card {
+    border-radius: 1rem !important;
+  }
+  /* table rows — tighten padding */
+  .roles-table-card td,
+  .roles-table-card th {
+    padding: 0.75rem 1rem !important;
+  }
+  /* modal */
+  .roles-modal-card {
+    border-radius: 1.25rem !important;
+  }
+  .roles-modal-body {
+    padding: 1.25rem !important;
+  }
+  .roles-modal-body h2 {
+    font-size: 1.5rem !important;
+  }
+  .roles-modal-body input,
+  .roles-modal-body textarea {
+    height: auto !important;
+    padding: 0.75rem 1rem !important;
+    border-radius: 0.75rem !important;
+  }
+  .roles-modal-footer button {
+    height: auto !important;
+    padding: 0.875rem 1.25rem !important;
+    border-radius: 0.75rem !important;
+    font-size: 0.875rem !important;
+  }
+}
+
+/* ══════════════════════════════════════════════════
+   ANIMATION UTILITIES
+══════════════════════════════════════════════════ */
+@keyframes fadeIn {
+  from { opacity: 0; transform: translateY(0.375rem); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.animate-fade-in {
+  animation: fadeIn 0.2s ease-out forwards;
+}
