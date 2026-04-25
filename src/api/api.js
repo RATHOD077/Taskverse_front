@@ -2,9 +2,6 @@
 import axios from 'axios';
 
 const RAW_BASE_URL = import.meta.env.VITE_API_URL || 'https://taskverse-back.onrender.com/api';
-const BASE_URL = RAW_BASE_URL.includes('localhost')
-  ? RAW_BASE_URL.replace(/^https:\/\//i, 'http://')
-  : RAW_BASE_URL;
 
 const api = axios.create({
   baseURL: BASE_URL,
