@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../api/api';
 import {
@@ -27,16 +27,22 @@ export default function Dashboard() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    if (!token || !userData) { navigate('/login'); return; }
-    setUser(JSON.parse(userData));
+    if (!token || !userData || userData === "undefined") { navigate('/login'); return; }
+    try {
+      setUser(JSON.parse(userData));
+    } catch (err) {
+      console.error("Error parsing user data:", err);
+      navigate('/login');
+      return;
+    }
 
     const getDashboardData = async () => {
       try {
-        // Updated to the specific endpoint in your controller
-        const res = await api.get('/dashboard/stats'); 
-        if (res.data.success) {
+        // Corrected to the employee-specific stats route
+        const res = await api.get('/dashboard/emp-stats'); 
+        if (res.data && res.data.success && res.data.stats) {
           setStats(res.data.stats);
-          setActivities(res.data.recentActivity);
+          setActivities(res.data.recentActivity || []);
         }
       } catch (err) {
         console.error("Backend fetch failed", err);

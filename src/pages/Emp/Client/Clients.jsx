@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Search, Plus, Eye, Edit3, Trash2, X, ChevronRight,
   MoreHorizontal, RefreshCw, CheckCircle, XCircle, AlertCircle
@@ -190,7 +190,8 @@ const Clients = () => {
     e.preventDefault();
     setSaving(true);
     try {
-      const user = JSON.parse(localStorage.getItem('user') || '{}');
+      const userData = localStorage.getItem('user');
+      const user = userData && userData !== "undefined" ? JSON.parse(userData) : {};
       const res  = await api.post('/customers', { ...formData, added_by: user.id || null }, getAuthHeaders());
       if (res.data.success) {
         showToast("Client added successfully");

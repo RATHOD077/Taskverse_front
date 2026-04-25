@@ -1,5 +1,6 @@
 import { useEffect, useState } from 'react';
 import api from '../../../api/api';
+import PaginationControls from '../../../components/PaginationControls';
 
 const STATUS_OPTIONS = ['pending', 'in_process', 'completed'];
 const PRIORITY_OPTIONS = ['low', 'medium', 'high'];
@@ -31,18 +32,21 @@ export default function UserTask() {
   const [error, setError] = useState('');
   const [filterUser, setFilterUser] = useState('');
   const [filterStatus, setFilterStatus] = useState('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false });
 
   // Fetch Tasks and Users
   const fetchAll = async () => {
     setLoading(true);
     try {
       const [tasksRes, usersRes] = await Promise.all([
-        api.get('/tasks'),
+        api.get('/tasks', { params: { page, limit: 10 } }),
         api.get('/users')
       ]);
 
       // Handle tasks
       setTasks(tasksRes.data.tasks || tasksRes.data || []);
+      setPagination(tasksRes.data.pagination || { page: 1, limit: 10, total: (tasksRes.data.tasks || []).length, totalPages: 1, hasNextPage: false, hasPrevPage: false });
 
       // Handle users - try multiple possible response structures
       let userList = [];
@@ -68,7 +72,7 @@ export default function UserTask() {
 
   useEffect(() => {
     fetchAll();
-  }, []);
+  }, [page]);
 
   const openCreate = () => {
     setEditTask(null);
@@ -202,7 +206,7 @@ export default function UserTask() {
               <tbody>
                 {filtered.map((t, i) => (
                   <tr key={t.id} style={{ background: i % 2 === 0 ? '#1e293b' : '#172033' }}>
-                    <td style={{ padding: '0.9rem 1.25rem' }}>{i + 1}</td>
+                    <td style={{ padding: '0.9rem 1.25rem' }}>{((pagination.page || 1) - 1) * (pagination.limit || 10) + i + 1}</td>
                     <td style={{ padding: '0.9rem 1.25rem', fontWeight: 600 }}>{t.title}</td>
                     <td style={{ padding: '0.9rem 1.25rem' }}>
                       {t.username ? t.username : 'Unassigned'}
@@ -223,6 +227,20 @@ export default function UserTask() {
           </div>
         )}
       </div>
+      {!filterUser && !filterStatus && (
+        <div style={{ marginTop: '1rem' }}>
+          <PaginationControls
+            page={pagination.page}
+            limit={pagination.limit}
+            total={pagination.total}
+            totalPages={pagination.totalPages}
+            hasPrevPage={pagination.hasPrevPage}
+            hasNextPage={pagination.hasNextPage}
+            onPageChange={setPage}
+            label="tasks"
+          />
+        </div>
+      )}
 
       {/* Modal */}
       {showModal && (

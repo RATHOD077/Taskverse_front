@@ -10,7 +10,6 @@ import api from '../../api/api';
 import DocViewer, { DocViewerRenderers } from "@cyntler/react-doc-viewer";
 import "@cyntler/react-doc-viewer/dist/index.css";
 
-
 const ITEMS_PER_PAGE = 10;
 
 // â”€â”€â”€ Helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -88,6 +87,8 @@ const EmpMediaLibrary = () => {
   const [openFolder, setOpenFolder]   = useState(null); // folder object
   const [folderPage, setFolderPage]   = useState(1);
   const [docPage, setDocPage]         = useState(1);
+  const [folderPagination, setFolderPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false });
+  const [docPagination, setDocPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false });
   const [search, setSearch]           = useState("");
 
   const [loading, setLoading]         = useState(false);
@@ -123,12 +124,13 @@ const EmpMediaLibrary = () => {
   const [newDocFile, setNewDocFile]     = useState(null);
 
   // â”€â”€ Fetch Folders â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const fetchFolders = async () => {
+  const fetchFolders = async (targetPage = folderPage) => {
     setLoading(true);
     try {
-      const response = await api.get('/media-library/emp-folders');
+      const response = await api.get('/media-library/emp-folders', { params: { page: targetPage, limit: 10 } });
       if (response.data.success) {
-        setFolders(response.data.folders);
+        setFolders(response.data.folders || []);
+        setFolderPagination(response.data.pagination || { page: targetPage, limit: 10, total: (response.data.folders || []).length, totalPages: 1, hasNextPage: false, hasPrevPage: false });
       }
     } catch (error) {
       console.error("Error fetching folders:", error);
@@ -138,16 +140,19 @@ const EmpMediaLibrary = () => {
   };
 
   useEffect(() => {
-    fetchFolders();
-  }, []);
+    if (!openFolder) {
+      fetchFolders(folderPage);
+    }
+  }, [folderPage, openFolder]);
 
   // â”€â”€ Fetch Documents â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
-  const fetchDocuments = async (folderId) => {
+  const fetchDocuments = async (folderId, targetPage = docPage) => {
     setLoading(true);
     try {
-      const response = await api.get(`/media-library/folders/${folderId}/documents`);
+      const response = await api.get(`/media-library/folders/${folderId}/documents`, { params: { page: targetPage, limit: 10 } });
       if (response.data.success) {
-        setDocs(response.data.documents);
+        setDocs(response.data.documents || []);
+        setDocPagination(response.data.pagination || { page: targetPage, limit: 10, total: (response.data.documents || []).length, totalPages: 1, hasNextPage: false, hasPrevPage: false });
       }
     } catch (error) {
       console.error("Error fetching documents:", error);
@@ -161,7 +166,7 @@ const EmpMediaLibrary = () => {
     setOpenFolder(folder);
     setDocPage(1);
     setSearch("");
-    fetchDocuments(folder.id);
+    fetchDocuments(folder.id, 1);
   };
 
   const handleBack = () => {
@@ -169,7 +174,6 @@ const EmpMediaLibrary = () => {
     setSearch("");
     setFolderPage(1);
     setDocs([]);
-    fetchFolders();
   };
 
   const handleAddFolder = async (e) => {
@@ -216,7 +220,7 @@ const EmpMediaLibrary = () => {
       });
 
       if (response.data.success) {
-        fetchDocuments(openFolder.id);
+        fetchDocuments(openFolder.id, docPage);
         setNewDocName("");
         setNewDocType("PDF");
         setNewDocFile(null);
@@ -343,26 +347,26 @@ const EmpMediaLibrary = () => {
     return `Expires in ${minutes} minute(s)`;
   };
 
+  useEffect(() => {
+    if (openFolder) {
+      fetchDocuments(openFolder.id, docPage);
+    }
+  }, [docPage, openFolder]);
+
   // â”€â”€ Folder filtered + paginated â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const filteredFolders = folders.filter((f) =>
     f.name.toLowerCase().includes(search.toLowerCase())
   );
-  const totalFolders = filteredFolders.length;
-  const pagedFolders = filteredFolders.slice(
-    (folderPage - 1) * ITEMS_PER_PAGE,
-    folderPage * ITEMS_PER_PAGE
-  );
+  const totalFolders = search ? filteredFolders.length : (folderPagination.total || 0);
+  const pagedFolders = filteredFolders;
 
   // â”€â”€ Doc filtered + paginated â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   const folderDocs = docs || [];
   const filteredDocs = folderDocs.filter((d) =>
     d.name.toLowerCase().includes(search.toLowerCase())
   );
-  const totalDocs = filteredDocs.length;
-  const pagedDocs = filteredDocs.slice(
-    (docPage - 1) * ITEMS_PER_PAGE,
-    docPage * ITEMS_PER_PAGE
-  );
+  const totalDocs = search ? filteredDocs.length : (docPagination.total || 0);
+  const pagedDocs = filteredDocs;
 
   const getDocPublicUrl = (docPath) => {
     if (!docPath) return "";
@@ -518,9 +522,11 @@ const EmpMediaLibrary = () => {
             )}
 
             {/* Folder Pagination */}
-            <div className="mt-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
-              <Pagination total={totalFolders} page={folderPage} onPage={setFolderPage} />
-            </div>
+            {!search && (
+              <div className="mt-6 bg-white rounded-2xl border border-slate-200 shadow-sm">
+                <Pagination total={totalFolders} page={folderPage} onPage={setFolderPage} />
+              </div>
+            )}
           </div>
         ) : !loading && openFolder ? (
           /* â”€â”€ DOCUMENT TABLE VIEW â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ */
@@ -574,7 +580,7 @@ const EmpMediaLibrary = () => {
                     {pagedDocs.map((doc, idx) => (
                       <tr key={doc.id} className="hover:bg-slate-50/50 transition-colors group">
                         <td className="px-6 py-3.5 text-center text-slate-400 text-xs font-bold">
-                          {(docPage - 1) * ITEMS_PER_PAGE + idx + 1}
+                          {((docPagination.page || 1) - 1) * (docPagination.limit || ITEMS_PER_PAGE) + idx + 1}
                         </td>
                         <td className="px-6 py-3.5">
                           <div className="flex items-center gap-3">
@@ -624,7 +630,7 @@ const EmpMediaLibrary = () => {
                     ))}
                   </tbody>
                 </table>
-                <Pagination total={totalDocs} page={docPage} onPage={setDocPage} />
+                {!search && <Pagination total={totalDocs} page={docPage} onPage={setDocPage} />}
               </>
             )}
           </div>

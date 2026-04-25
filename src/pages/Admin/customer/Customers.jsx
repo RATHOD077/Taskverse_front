@@ -4,6 +4,7 @@ import {
   ChevronRight, MoreHorizontal, Globe, ChevronsUpDown, Filter, ArrowLeft
 } from "lucide-react";
 import api from "../../../api/api";
+import PaginationControls from "../../../components/PaginationControls";
 
 const Customers = () => {
   const [view, setView] = useState("list"); // "list" or "details"
@@ -15,6 +16,8 @@ const Customers = () => {
   const [resetTarget, setResetTarget] = useState(null);
   const [selectedCustomer, setSelectedCustomer] = useState(null);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false });
 
   const [showPass, setShowPass] = useState(false);
   const [resetForm, setResetForm] = useState({ newPassword: "", confirmPassword: "" });
@@ -32,9 +35,10 @@ const Customers = () => {
   const fetchCustomers = async () => {
     try {
       setLoading(true);
-      const res = await api.get('/customers');
+      const res = await api.get('/customers', { params: { page, limit: 10 } });
       if (res.data.success) {
         setData(res.data.customers || []);
+        setPagination(res.data.pagination || { page: 1, limit: 10, total: (res.data.customers || []).length, totalPages: 1, hasNextPage: false, hasPrevPage: false });
       }
     } catch (err) {
       console.error("Failed to fetch customers:", err);
@@ -45,7 +49,7 @@ const Customers = () => {
 
   useEffect(() => {
     fetchCustomers();
-  }, []);
+  }, [page]);
 
   // Working Search Filter
   const filtered = data.filter((c) => {
@@ -252,7 +256,7 @@ const Customers = () => {
                     ) : (
                       filtered.map((item, idx) => (
                         <tr key={item.id} className="hover:bg-slate-50/70 transition-colors">
-                          <td className="px-6 py-5 text-slate-500 font-medium">{idx + 1}</td>
+                          <td className="px-6 py-5 text-slate-500 font-medium">{((pagination.page || 1) - 1) * (pagination.limit || 10) + idx + 1}</td>
                           <td className="px-6 py-5 font-bold text-slate-900">CL000{item.id}</td>
                           <td className="px-6 py-5 font-semibold text-slate-900">{item.name}</td>
                           <td className="px-6 py-5 text-slate-600">{item.email || ""}</td>
@@ -306,6 +310,18 @@ const Customers = () => {
                 </table>
               </div>
             </div>
+            {!search.trim() && (
+              <PaginationControls
+                page={pagination.page}
+                limit={pagination.limit}
+                total={pagination.total}
+                totalPages={pagination.totalPages}
+                hasPrevPage={pagination.hasPrevPage}
+                hasNextPage={pagination.hasNextPage}
+                onPageChange={setPage}
+                label="customers"
+              />
+            )}
           </>
         ) : (
           /* ==================== DETAILS PAGE - Responsive ==================== */

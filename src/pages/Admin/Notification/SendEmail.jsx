@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import api from '../../../api/api'; 
 import { 
   ChevronRight, MoreHorizontal, Globe,
@@ -39,10 +39,14 @@ const SendEmail = () => {
          if(custRes.data.success) setCustomers(custRes.data.customers);
 
          const savedUser = localStorage.getItem('user');
-         if (savedUser) {
-           const user = JSON.parse(savedUser);
-           setFromName(user.username || '');
-           setReplyTo(user.email || '');
+         if (savedUser && savedUser !== "undefined") {
+           try {
+             const user = JSON.parse(savedUser);
+             setFromName(user.username || '');
+             setReplyTo(user.email || '');
+           } catch (err) {
+             console.error("Error parsing user data:", err);
+           }
          }
        } catch (err) {
          console.error("Failed to fetch data:", err);

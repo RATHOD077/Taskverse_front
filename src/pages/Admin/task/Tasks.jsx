@@ -5,6 +5,7 @@ import {
   Calendar, X, ChevronsUpDown, Folder, ArrowLeft
 } from "lucide-react";
 import api from "../../../api/api";
+import PaginationControls from "../../../components/PaginationControls";
 
 const DetailRow = ({ label, value }) => (
   <div className="flex flex-col gap-[0.25rem]">
@@ -20,6 +21,8 @@ const Tasks = () => {
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [isSaving, setIsSaving] = useState(false);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false });
   
   // Dropdown data
   const [clients, setClients] = useState([]);
@@ -54,8 +57,11 @@ const Tasks = () => {
     
     // 1. Tasks
     try {
-      const res = await api.get('/tasks');
-      if (res.data.success) setData(res.data.tasks);
+      const res = await api.get('/tasks', { params: { page, limit: 10 } });
+      if (res.data.success) {
+        setData(res.data.tasks || []);
+        setPagination(res.data.pagination || { page: 1, limit: 10, total: (res.data.tasks || []).length, totalPages: 1, hasNextPage: false, hasPrevPage: false });
+      }
     } catch (err) {}
 
     // 2. Customers (Clients)
@@ -87,7 +93,7 @@ const Tasks = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [page]);
 
   // Save Task
   const handleSaveTask = async () => {
@@ -287,7 +293,7 @@ const Tasks = () => {
                     ) : (
                       data.map((item, idx) => (
                         <tr key={item.id} className="hover:bg-slate-50/50 transition-colors">
-                          <td className="px-4 py-4 text-center font-bold text-slate-900">{idx + 1}</td>
+                          <td className="px-4 py-4 text-center font-bold text-slate-900">{((pagination.page || 1) - 1) * (pagination.limit || 10) + idx + 1}</td>
                           <td className="px-4 py-4 font-semibold text-slate-800">{item.title}</td>
                           <td className="px-4 py-4 text-slate-600">{item.client_name || ""}</td>
                           <td className="px-4 py-4">
@@ -317,6 +323,16 @@ const Tasks = () => {
                 </table>
               </div>
             </div>
+            <PaginationControls
+              page={pagination.page}
+              limit={pagination.limit}
+              total={pagination.total}
+              totalPages={pagination.totalPages}
+              hasPrevPage={pagination.hasPrevPage}
+              hasNextPage={pagination.hasNextPage}
+              onPageChange={setPage}
+              label="tasks"
+            />
           </>
         ) : (
           /* --- TASK DETAILS VIEW --- */
@@ -367,7 +383,7 @@ const Tasks = () => {
               </button>
             </div>
 
-            <div className="p-6 space-y-5 flex-1">
+            <div className="p-6 space-y-5 flex-1 overflow-y-auto">
               <div className="space-y-1.5">
                 <label className="text-sm font-semibold text-slate-700">Title <span className="text-red-500">*</span></label>
                 <input type="text" value={form.title} onChange={e => setForm({...form, title: e.target.value})} className="w-full px-4 py-2 border border-slate-200 rounded-lg outline-none focus:border-emerald-500 transition-all text-sm" />

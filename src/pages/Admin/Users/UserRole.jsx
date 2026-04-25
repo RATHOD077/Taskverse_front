@@ -4,6 +4,7 @@ import {
   Plus, Search, Eye, Edit2, Trash2, 
   ChevronRight, Globe, MoreHorizontal, ChevronsUpDown, X, ShieldCheck, Save
 } from 'lucide-react';
+import PaginationControls from '../../../components/PaginationControls';
 
 export default function UserRole() {
   const [roles, setRoles] = useState([]);
@@ -17,6 +18,8 @@ export default function UserRole() {
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false });
 
   // Permissions Management Modal
   const [showPerms, setShowPerms] = useState(false);
@@ -30,8 +33,9 @@ export default function UserRole() {
   const fetchRoles = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/roles');
+      const res = await api.get('/roles', { params: { page, limit: 10 } });
       setRoles(res.data.roles || []);
+      setPagination(res.data.pagination || { page: 1, limit: 10, total: (res.data.roles || []).length, totalPages: 1, hasNextPage: false, hasPrevPage: false });
     } catch (err) {
       console.error(err);
     } finally {
@@ -39,7 +43,7 @@ export default function UserRole() {
     }
   };
 
-  useEffect(() => { fetchRoles(); }, []);
+  useEffect(() => { fetchRoles(); }, [page]);
 
   // Open Advanced Permissions Modal
   const openPermissions = async (role) => {
@@ -276,7 +280,7 @@ export default function UserRole() {
                   <tr><td colSpan="5" className="p-10 text-center text-slate-400">No roles found.</td></tr>
                 ) : filteredRoles.map((r, i) => (
                   <tr key={r.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-4 text-center font-bold text-slate-900">{i + 1}</td>
+                    <td className="px-6 py-4 text-center font-bold text-slate-900">{((pagination.page || 1) - 1) * (pagination.limit || 10) + i + 1}</td>
                     <td className="px-6 py-4 font-bold text-slate-900">{r.name}</td>
                     <td className="px-6 py-4 text-slate-500 italic max-w-xs truncate">{r.description || '"”'}</td>
                     <td className="px-6 py-4 text-slate-400 font-medium">
@@ -317,6 +321,18 @@ export default function UserRole() {
               </tbody>
             </table>
           </div>
+          {!search.trim() && (
+            <PaginationControls
+              page={pagination.page}
+              limit={pagination.limit}
+              total={pagination.total}
+              totalPages={pagination.totalPages}
+              hasPrevPage={pagination.hasPrevPage}
+              hasNextPage={pagination.hasNextPage}
+              onPageChange={setPage}
+              label="roles"
+            />
+          )}
         </div>
       </div>
 

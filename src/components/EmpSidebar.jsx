@@ -1,4 +1,4 @@
-﻿// src/components/EmpSidebar.jsx
+// src/components/EmpSidebar.jsx
 import { useState, useRef, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import {
@@ -16,7 +16,12 @@ export default function EmpSidebar({ isMobileOpen, onClose }) {
   const profileRef = useRef(null);
 
   const userData = localStorage.getItem('user');
-  const user = userData ? JSON.parse(userData) : null;
+  let user = null;
+  try {
+    user = userData && userData !== "undefined" ? JSON.parse(userData) : null;
+  } catch (err) {
+    console.error("Error parsing user data:", err);
+  }
 
   const isActive = (path) => location.pathname === path;
 

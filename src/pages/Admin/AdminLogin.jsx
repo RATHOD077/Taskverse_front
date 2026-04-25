@@ -1,4 +1,4 @@
-﻿// src/pages/admin/AdminLogin.jsx
+// src/pages/admin/AdminLogin.jsx
 import { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/api';
@@ -42,7 +42,7 @@ export default function AdminLogin() {
       localStorage.setItem('admin', JSON.stringify(response.data.admin));
       navigate('/admin/dashboard');
     } catch (err) {
-      setError(err.response?.data?.message || 'Invalid email or password');
+      setError(err.response?.data?.message || 'Server error. Please try again later.');
     } finally {
       setLoading(false);
     }

@@ -5,18 +5,22 @@ import {
   Phone, Clock, ArrowLeft
 } from "lucide-react";
 import api from "../../../api/api";
+import PaginationControls from "../../../components/PaginationControls";
 
 const SmsLogs = () => {
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [selectedLog, setSelectedLog] = useState(null);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false });
 
   const fetchLogs = async () => {
     setLoading(true);
     try {
-      const response = await api.get('/sms-logs');
+      const response = await api.get('/sms-logs', { params: { page, limit: 10 } });
       if (response.data.success) {
-        setLogs(response.data.logs);
+        setLogs(response.data.logs || []);
+        setPagination(response.data.pagination || { page: 1, limit: 10, total: (response.data.logs || []).length, totalPages: 1, hasNextPage: false, hasPrevPage: false });
       }
     } catch (error) {
       console.error("Failed to fetch SMS logs:", error);
@@ -27,7 +31,7 @@ const SmsLogs = () => {
 
   useEffect(() => {
     fetchLogs();
-  }, []);
+  }, [page]);
 
   if (selectedLog) {
     return (
@@ -195,7 +199,7 @@ const SmsLogs = () => {
                 <tr><td colSpan="6" className="px-6 py-6 text-center text-slate-400">No SMS logs found.</td></tr>
               ) : logs.map((log, index) => (
                 <tr key={log.id} className="hover:bg-slate-50/50 transition-colors group">
-                  <td className="px-6 py-4 text-slate-400 font-medium">{index + 1}</td>
+                  <td className="px-6 py-4 text-slate-400 font-medium">{((pagination.page || 1) - 1) * (pagination.limit || 10) + index + 1}</td>
                   
                   <td className="px-6 py-4 font-bold text-slate-600">
                     <div className="flex items-center gap-1.5">
@@ -259,6 +263,16 @@ const SmsLogs = () => {
             </tbody>
           </table>
         </div>
+        <PaginationControls
+          page={pagination.page}
+          limit={pagination.limit}
+          total={pagination.total}
+          totalPages={pagination.totalPages}
+          hasPrevPage={pagination.hasPrevPage}
+          hasNextPage={pagination.hasNextPage}
+          onPageChange={setPage}
+          label="sms logs"
+        />
       </div>
     </div>
   );

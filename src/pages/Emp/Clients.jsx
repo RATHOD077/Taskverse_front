@@ -2,23 +2,27 @@ import React, { useState, useEffect } from "react";
 import { Search, Filter, Eye, Edit, ChevronLeft, ChevronRight, Globe, LayoutGrid, Plus } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 import api from "../../api/api";
+import PaginationControls from "../../components/PaginationControls";
 
 const Clients = () => {
   const navigate = useNavigate();
   const [clients, setClients] = useState([]);
   const [search, setSearch] = useState("");
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false });
 
   useEffect(() => {
     fetchClients();
-  }, []);
+  }, [page]);
 
   const fetchClients = async () => {
     try {
       setLoading(true);
-      const res = await api.get("/customers/emp");
+      const res = await api.get("/customers/emp", { params: { page, limit: 10 } });
       if (res.data.success) {
-        setClients(res.data.customers);
+        setClients(res.data.customers || []);
+        setPagination(res.data.pagination || { page: 1, limit: 10, total: (res.data.customers || []).length, totalPages: 1, hasNextPage: false, hasPrevPage: false });
       }
     } catch (err) {
       console.error("Error fetching clients:", err);
@@ -125,7 +129,7 @@ const Clients = () => {
               ) : (
                 filteredClients.map((client, index) => (
                   <tr key={client.id} className="hover:bg-slate-50/50 transition-colors group">
-                    <td className="px-6 py-4 text-sm font-medium text-slate-500">{index + 1}</td>
+                    <td className="px-6 py-4 text-sm font-medium text-slate-500">{((pagination.page || 1) - 1) * (pagination.limit || 10) + index + 1}</td>
                     <td className="px-6 py-4 text-sm font-bold text-slate-900">{client.id}</td>
                     <td className="px-6 py-4 text-sm font-bold text-slate-800">{client.name}</td>
                     <td className="px-6 py-4 text-sm text-slate-500 font-medium">{client.email || ""}</td>
@@ -155,17 +159,18 @@ const Clients = () => {
             </tbody>
           </table>
           
-          {/* Pagination */}
-          <div className="px-6 py-4 bg-slate-50/50 border-t border-slate-100 flex items-center justify-between">
-            <p className="text-xs font-bold text-slate-400 uppercase tracking-tighter">
-              Showing 1 to {filteredClients.length} of {filteredClients.length} clients
-            </p>
-            <div className="flex items-center gap-1">
-               <button className="p-2 text-slate-400 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all"><ChevronLeft size={16} /></button>
-               <button className="w-8 h-8 bg-emerald-500 text-white rounded-lg text-xs font-bold shadow-lg shadow-emerald-500/20">1</button>
-               <button className="p-2 text-slate-400 hover:bg-white rounded-lg border border-transparent hover:border-slate-200 transition-all"><ChevronRight size={16} /></button>
-            </div>
-          </div>
+          {!search.trim() && (
+            <PaginationControls
+              page={pagination.page}
+              limit={pagination.limit}
+              total={pagination.total}
+              totalPages={pagination.totalPages}
+              hasPrevPage={pagination.hasPrevPage}
+              hasNextPage={pagination.hasNextPage}
+              onPageChange={setPage}
+              label="clients"
+            />
+          )}
         </div>
       </div>
     </div>

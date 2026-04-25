@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { 
   LayoutDashboard, 
@@ -55,7 +55,12 @@ export default function AdminSidebar() {
   const isActive = (path) => location.pathname === path;
 
   const adminData = localStorage.getItem('admin');
-  const admin = adminData ? JSON.parse(adminData) : null;
+  let admin = null;
+  try {
+    admin = adminData && adminData !== "undefined" ? JSON.parse(adminData) : null;
+  } catch (err) {
+    console.error("Error parsing admin data:", err);
+  }
 
   const handleLogout = () => {
     localStorage.removeItem('token');

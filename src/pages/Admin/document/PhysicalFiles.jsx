@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect } from "react";
+import React, { useState, useEffect } from "react";
 import { 
   Box, Plus, Search, Edit2, Trash2, Hash, 
   MapPin, FileStack, ChevronRight,
@@ -40,9 +40,9 @@ const PhysicalFiles = () => {
 
   // Live Search Filter
   const filteredData = data.filter(item =>
-    item.file_no.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.file_name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-    item.storage_rack_no.toLowerCase().includes(searchTerm.toLowerCase())
+    (item.file_no || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.file_name || '').toLowerCase().includes(searchTerm.toLowerCase()) ||
+    (item.storage_rack_no || '').toLowerCase().includes(searchTerm.toLowerCase())
   );
 
   const openAdd = () => {

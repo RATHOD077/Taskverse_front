@@ -5,19 +5,23 @@ import {
   Calendar, ExternalLink, Clock
 } from "lucide-react";
 import api from "../../../api/api";
+import PaginationControls from "../../../components/PaginationControls";
 
 const EmailLogs = () => {
   const [view, setView] = useState("list");
   const [selectedLog, setSelectedLog] = useState(null);
   const [logs, setLogs] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false });
 
   // Fetch logs from backend
   const fetchLogs = async () => {
     try {
-      const response = await api.get('/email-logs');
+      const response = await api.get('/email-logs', { params: { page, limit: 10 } });
       if (response.data.success) {
-        setLogs(response.data.logs);
+        setLogs(response.data.logs || []);
+        setPagination(response.data.pagination || { page: 1, limit: 10, total: (response.data.logs || []).length, totalPages: 1, hasNextPage: false, hasPrevPage: false });
       }
     } catch (error) {
       console.error("Failed to fetch email logs:", error);
@@ -28,7 +32,7 @@ const EmailLogs = () => {
 
   useEffect(() => {
     fetchLogs();
-  }, []);
+  }, [page]);
 
   const getStatusStyle = (status) => {
     const base = "px-3 py-1 rounded-full text-[0.7rem] font-bold flex items-center gap-1.5 ";
@@ -106,7 +110,7 @@ const EmailLogs = () => {
                   <tbody className="text-[0.85rem] divide-y divide-slate-50">
                     {logs.map((log, idx) => (
                       <tr key={log.id} className="hover:bg-slate-50/50 transition-colors">
-                        <td className="px-6 py-4 text-slate-400 font-medium">{idx + 1}</td>
+                        <td className="px-6 py-4 text-slate-400 font-medium">{((pagination.page || 1) - 1) * (pagination.limit || 10) + idx + 1}</td>
                         <td className="px-6 py-4 font-semibold text-slate-600">
                           {log.sender} <Info size={14} className="inline ml-1 text-slate-300" />
                         </td>
@@ -150,6 +154,16 @@ const EmailLogs = () => {
                   </tbody>
                 </table>
               </div>
+              <PaginationControls
+                page={pagination.page}
+                limit={pagination.limit}
+                total={pagination.total}
+                totalPages={pagination.totalPages}
+                hasPrevPage={pagination.hasPrevPage}
+                hasNextPage={pagination.hasNextPage}
+                onPageChange={setPage}
+                label="email logs"
+              />
             </div>
           </div>
         ) : (

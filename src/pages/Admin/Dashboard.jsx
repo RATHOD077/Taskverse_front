@@ -22,9 +22,13 @@ export default function AdminDashboard() {
 
   useEffect(() => {
     const stored = localStorage.getItem('admin') || localStorage.getItem('user');
-    if (stored) {
-      const data = JSON.parse(stored);
-      setAdminName(data.admin_name || data.username || 'Admin');
+    if (stored && stored !== "undefined") {
+      try {
+        const data = JSON.parse(stored);
+        setAdminName(data.admin_name || data.username || 'Admin');
+      } catch (err) {
+        console.error("Error parsing stored user data:", err);
+      }
     }
     fetchDashboardStats();
   }, []);
@@ -33,14 +37,17 @@ export default function AdminDashboard() {
     try {
       setLoading(true);
       const res = await api.get('/dashboard/stats');
-      setStats({
-        activeCases: res.data.stats.activeTasks || 0,
-        totalCases: res.data.stats.totalProjects || 0,
-        activeClients: res.data.stats.totalUsers || 0,
-        totalRevenue: res.data.stats.totalRevenue || 0,
-        pendingTasks: 0,
-        hearingsDue: 0 
-      });
+      if (res.data && res.data.success && res.data.stats) {
+        const s = res.data.stats;
+        setStats({
+          activeCases: s.activeTasks || 0,
+          totalCases: s.totalProjects || 0,
+          activeClients: s.totalUsers || 0,
+          totalRevenue: s.totalRevenue || 0,
+          pendingTasks: 0,
+          hearingsDue: 0 
+        });
+      }
     } catch (err) {
       console.error("Failed to load dashboard stats:", err);
     } finally {

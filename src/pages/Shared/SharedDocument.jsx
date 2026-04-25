@@ -1,6 +1,6 @@
-﻿import React, { useEffect, useMemo, useState } from "react";
+import React, { useEffect, useMemo, useState } from "react";
 import { useParams } from "react-router-dom";
-import axios from "axios";
+import api from "../../api/api";
 import { Download, Copy } from "lucide-react";
 
 const SharedDocument = () => {
@@ -15,20 +15,14 @@ const SharedDocument = () => {
     setTimeout(() => setBlocked(false), 2000);
   };
 
-  const API_BASE_URL = useMemo(() => {
-    // Infer backend from frontend origin for LAN devices.
-    // Typical dev setup: frontend :5173, backend :5000
-    const origin = window.location.origin;
-    if (origin.includes(":5173")) return origin.replace(":5173", ":5000") + "/api/media-library";
-    return origin + "/api/media-library";
-  }, []);
+  const API_BASE_URL = api.defaults.baseURL + "/media-library";
 
   useEffect(() => {
     const run = async () => {
       setLoading(true);
       setError("");
       try {
-        const res = await axios.get(`${API_BASE_URL}/shared/${token}/meta`);
+        const res = await api.get(`/media-library/shared/${token}/meta`);
         if (res.data?.success) setMeta(res.data);
         else setError(res.data?.message || "Failed to load shared document");
       } catch (e) {

@@ -5,6 +5,7 @@ import {
   ArrowLeft, CheckCircle, Clock, CheckSquare, FileText
 } from "lucide-react";
 import api from "../../api/api";
+import PaginationControls from "../../components/PaginationControls";
 
 const DetailRow = ({ label, value }) => (
   <div className="flex flex-col gap-[0.25rem]">
@@ -18,6 +19,8 @@ const Tasks = () => {
   const [selectedTask, setSelectedTask] = useState(null);
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [page, setPage] = useState(1);
+  const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1, hasNextPage: false, hasPrevPage: false });
   
   // Status Update State
   const [isStatusModalOpen, setIsStatusModalOpen] = useState(false);
@@ -26,9 +29,10 @@ const Tasks = () => {
   const fetchData = async () => {
     setLoading(true);
     try {
-      const res = await api.get('/tasks/emp');
+      const res = await api.get('/tasks/emp', { params: { page, limit: 10 } });
       if (res.data.success) {
-        setData(res.data.tasks);
+        setData(res.data.tasks || []);
+        setPagination(res.data.pagination || { page: 1, limit: 10, total: (res.data.tasks || []).length, totalPages: 1, hasNextPage: false, hasPrevPage: false });
       }
     } catch (error) {
       console.error("Error fetching tasks:", error);
@@ -39,7 +43,7 @@ const Tasks = () => {
 
   useEffect(() => {
     fetchData();
-  }, []);
+  }, [page]);
 
   const handleUpdateStatus = async () => {
     try {
@@ -174,7 +178,7 @@ const Tasks = () => {
                     ) : (
                       data.map((item, idx) => (
                         <tr key={item.id} className="hover:bg-slate-50/50 transition-colors group">
-                          <td className="px-6 py-4 text-center font-bold text-slate-400 group-hover:text-emerald-500 transition-colors">{idx + 1}</td>
+                          <td className="px-6 py-4 text-center font-bold text-slate-400 group-hover:text-emerald-500 transition-colors">{((pagination.page || 1) - 1) * (pagination.limit || 10) + idx + 1}</td>
                           <td className="px-4 py-4">
                             <p className="font-bold text-slate-800">{item.title}</p>
                             <p className="text-[0.7rem] text-slate-400 font-medium bg-slate-100 inline-block px-1.5 rounded mt-1 capitalize">{item.task_type}</p>
@@ -224,6 +228,16 @@ const Tasks = () => {
                 </table>
               </div>
             </div>
+            <PaginationControls
+              page={pagination.page}
+              limit={pagination.limit}
+              total={pagination.total}
+              totalPages={pagination.totalPages}
+              hasPrevPage={pagination.hasPrevPage}
+              hasNextPage={pagination.hasNextPage}
+              onPageChange={setPage}
+              label="tasks"
+            />
           </>
         ) : (
           /* --- TASK DETAILS VIEW --- */

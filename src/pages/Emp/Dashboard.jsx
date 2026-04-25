@@ -1,4 +1,4 @@
-﻿import { useEffect, useState, useRef } from 'react';
+import { useEffect, useState, useRef } from 'react';
 import { useNavigate } from 'react-router-dom';
 import api from '../../api/api';
 import {
@@ -29,8 +29,14 @@ export default function EmpDashboard() {
   useEffect(() => {
     const token = localStorage.getItem('token');
     const userData = localStorage.getItem('user');
-    if (!token || !userData) { navigate('/login'); return; }
-    setUser(JSON.parse(userData));
+    if (!token || !userData || userData === "undefined") { navigate('/login'); return; }
+    try {
+      setUser(JSON.parse(userData));
+    } catch (err) {
+      console.error("Error parsing user data:", err);
+      navigate('/login');
+      return;
+    }
 
     const getDashboardData = async () => {
       try {
